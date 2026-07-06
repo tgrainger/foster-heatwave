@@ -10,12 +10,12 @@ theme_tess <- function () {
   theme_cowplot()+
     theme(axis.title.y = element_text(margin = margin(t = 0, r = 15, b = 0, l = 0)))+
     theme(axis.title.x = element_text(margin = margin(t = 15, r = 0, b = 0, l = 0)))+
-    theme(axis.text.x=element_text(size=20))+
-    theme(axis.text.y=element_text(size=20))+
-    theme(axis.title.x=element_text(size=20))+
-    theme(axis.title.y=element_text(size=20))+
-    theme(plot.title = element_text(hjust = 0.5,size=20))+
-    theme(axis.title.y=element_text(size=20))
+    theme(axis.text.x=element_text(size=23))+
+    theme(axis.text.y=element_text(size=23))+
+    theme(axis.title.x=element_text(size=23))+
+    theme(axis.title.y=element_text(size=23))+
+    theme(plot.title = element_text(hjust = 0.5,size=23))+
+    theme(axis.title.y=element_text(size=23))
 }
  
 # Import data
@@ -90,28 +90,30 @@ data$weeks_since_heatwave <- as.numeric(as.character(data$weeks_since_heatwave))
 # Offset summary data points
   summary_data <- summary_data %>%
     mutate(x_pos = time_index + x_offset)
+  
 
 # Generate a plot of population size for different adapted temperatures with and without a heatwave
-p <- ggplot(summary_data, aes(x = x_pos, y = mean, color = adapted_temp, shape = heatwave, group = group_id)) +
-    geom_point(size = 4) +
+p <- ggplot(summary_data, aes(x = x_pos, y = mean, color = adapted_temp, 
+                              shape = heatwave, group = group_id)) +
+    geom_point(size = 4.5) +
     scale_x_continuous(breaks = 1:5, labels = c("0", "2", "6", "12", "18")) +
     geom_jitter(data = data, 
                 aes(x = x_pos, y = alive, color = adapted_temp, shape = heatwave),
-                width = 0.01, height = 0, size = 3, alpha = 0.5) +
-    geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0) +
+                width = 0.01, height = 0, size = 3, alpha = 0.4) +
+    geom_errorbar(aes(ymin = mean - se, ymax = mean + se), width = 0, linewidth = 1.12) +
     scale_shape_manual(values = c("0" = 16, "1" = 17), 
                        name = "Heatwave", 
                        labels = c("0" = "Control", "1" = "Treatment")) +
     scale_color_manual(values = c("cornflowerblue", "darkorange", "brown3"),
-                       name = "Adapted temperature",
+                       name = "Historical temperature",
                        labels = c("25°C", "30°C", "35°C"),
                        breaks = c("25", "30", "35"),
                        guide = guide_legend(reverse = TRUE)) +
     xlab("Weeks since heatwave") +    
     ylab("Population size (live adult beetles)") +
     theme_tess() +
-  theme(legend.title = element_text(size = 16),
-    legend.text  = element_text(size = 15),
+    theme(legend.title = element_text(size = 21),
+    legend.text  = element_text(size = 17),
     legend.key.size = unit(0.6, "cm"),
     legend.key.height = unit(0.8, "cm"),
     legend.spacing.y  = unit(0.6, "cm"))
@@ -120,11 +122,11 @@ p <- ggplot(summary_data, aes(x = x_pos, y = mean, color = adapted_temp, shape =
 
 # Save the plot
 ggsave(file="./figures/popsize.pdf", p, 
-       width = 35, height = 22, units = "cm", dpi = 200) 
+       width = 30, height = 18, units = "cm", dpi = 200) 
 
 #### STATS ####
 
-#------ Global model ------#
+#------ Global model (through time) ------#
 
 # Create a new column with specific population ids called "pop_id"
 data <- data%>%
@@ -134,12 +136,12 @@ data <- data%>%
 #n_distinct(data$pop_id)
 
 # Construct a global linear model
-lmmglobal <- lmer(alive ~ adapted_temp * heatwave * weeks_since_heatwave + (1|pop_id),data = data)
+lmmglobal <- lmer(alive ~ adapted_temp * heatwave * weeks_since_heatwave + 
+                    (1|pop_id),data = data)
 
 # Run a three-way ANOVA
 Anova(lmmglobal, type = 3)
 #significant three-way interaction
-
 
 #------ Two-way ANOVAs for each time point ------#
 
@@ -152,7 +154,7 @@ lm_week0<-lm(alive~adapted_temp*heatwave,data=week0data)
 
 # Run an ANOVA
 Anova(lm_week0,type="2")
-#signficant interaction
+#significant interaction
 
 # Filter data for Week 2
 week2data <- data %>%

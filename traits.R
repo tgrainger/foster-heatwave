@@ -16,8 +16,7 @@ theme_tess <- function () {
     theme(axis.title.x=element_text(size=20))+
     theme(axis.title.y=element_text(size=20))+
     theme(plot.title = element_text(hjust = 0.5,size=20))+
-    theme(axis.title.y=element_text(size=20))
-}
+    theme(axis.title.y=element_text(size=20))}
 
 #### BEFORE EXPERIMENT BODY SIZE ####
 
@@ -37,6 +36,10 @@ data$weight <- data$weight * 1000
 
 # Construct a linear model
 lm_bodysize <- lm(weight ~ adapted_temp * sex, data = data)
+
+#Check model assumptions
+#windows();plot(lm_bodysize) 
+#looks good
 
 # Run an ANOVA
 Anova(lm_bodysize, type="2")
@@ -72,17 +75,17 @@ p_pre <- ggplot(summary_data, aes(x = sex, y = mean, color = adapted_temp)) +
   geom_jitter(data = data, aes(x = sex, y = weight, color = adapted_temp), 
               position = position_jitterdodge(jitter.width = 0.1, dodge.width = 0.4), 
               size = 3, alpha = 0.3) +
-  geom_point(size = 4, position = position_dodge(width = 0.4)) +
+  geom_point(size = 5, position = position_dodge(width = 0.4)) +
   geom_errorbar(aes(ymin = mean - se, ymax = mean + se), 
-                position = position_dodge(width = 0.4), width = 0) +
+                position = position_dodge(width = 0.4), width = 0, linewidth = 1.12) +
   geom_text(aes(label = plotting_labels, 
                 group = adapted_temp,  
                 y = mean + se + 0.22), 
             position = position_dodge(width = 0.4), 
             color = "black", 
-            size = 7) +
+            size = 6) +
   scale_color_manual(values = c("25°C" = "cornflowerblue", "30°C" = "darkorange", "35°C" = "brown3"), 
-                     name = "Adapted temperature") +
+                     name = "Historical temperature") +
   scale_x_discrete(labels = c("f" = "Female", "m" = "Male")) +
   xlab("Sex") + 
   ylab("Body size (mg)") +
@@ -106,25 +109,31 @@ data2$adapted_temp <- factor(data2$adapted_temp,
 # Convert grams to milligrams
 data2$weight <- data2$weight * 1000
 
+
+# Calculate the mean for each population
+means <- data2 %>%
+  drop_na(weight) %>%
+  group_by(heatwave, adapted_temp, sex, population_id) %>%
+  summarise(pop_mean = mean(weight))
+
 #------Stats------#
 
 # Construct a linear model
-lm_bodysize_post <- lm(weight ~ adapted_temp * sex * heatwave, data = data2)
+lm_bodysize_post <- lm(pop_mean ~ adapted_temp * sex * heatwave, data = means)
+
+#Check model assumptions
+#windows();plot(lm_bodysize_post) 
+#looks good
 
 # Run an ANOVA
 Anova(lm_bodysize_post, type="2")
 #significant interaction
 
 # Run a Tukey test
-emmeans(lm_bodysize_post, pairwise ~ adapted_temp | sex * heatwave, adjust = "tukey")
+emmeans(lm_bodysize_post, pairwise ~ adapted_temp | sex * heatwave, 
+        adjust = "tukey")
 
 #------Plot------#
-
-# Calculate the mean for each population
-means <- data2 %>%
-  drop_na(weight) %>%
-  group_by(heatwave, adapted_temp, sex, population_id) %>%
-  summarise(pop_mean = mean(weight), .groups = "drop")
 
 # Calculate summary statistics using the means for each population
 summary_data2 <- means %>%
@@ -184,19 +193,19 @@ summary_data2 <- summary_data2 %>%
   arrange(sex, heatwave, adapted_temp)
 
 # Add letters denoting Tukey test results
-summary_data2$plotting_labels <- c("a", "ab", "b", "a", "a", "a", "a", "a", "b", "a", "ab", "b")
+summary_data2$plotting_labels <- c("a", "a", "a", "a", "a", "a", "a", "a", "b", "a", "ab", "b")
 
 # Generate plot
 p_post <- ggplot(summary_data2, aes(x = x_pos, y = mean, 
                 color = adapted_temp, shape = heatwave)) +
-  geom_point(size = 4, position = position_dodge(width = 0.4)) +
+  geom_point(size = 5, position = position_dodge(width = 0.4)) +
   geom_jitter(data = means, aes(x = x_pos, y = pop_mean, 
                                   color = adapted_temp,shape = heatwave),
               position = position_jitterdodge(jitter.width = 0, dodge.width = 0.4), 
-              size = 3, alpha = 0.5) +
+              size = 3, alpha = 0.3) +
   geom_errorbar(aes(ymin = mean - se, ymax = mean + se),
                 position = position_dodge(width = 0.4),
-                width = 0) +
+                width = 0, linewidth = 1.12) +
   geom_text(aes(label = plotting_labels,
                 group = adapted_temp,
                 y = mean + se + 0.2),
@@ -205,7 +214,7 @@ p_post <- ggplot(summary_data2, aes(x = x_pos, y = mean,
             size = 6) +
   scale_color_manual(
     values = c("25°C" = "cornflowerblue", "30°C" = "darkorange", "35°C" = "brown3"),
-    name = "Adapted temperature")+
+    name = "Historical temperature")+
   scale_shape_manual(values = c("Control" = 16, "Treatment" = 17), 
                      name = "Heatwave") + 
   scale_y_continuous(limits = c(1.0, 1.8)) +
@@ -218,7 +227,7 @@ p_post <- ggplot(summary_data2, aes(x = x_pos, y = mean,
   theme_tess()+ 
   theme(aspect.ratio = 1)
 
-####POST HEATWAVE FECUNDITY#### 
+#### FECUNDITY #### 
 
 # Import data
 f_data <-read.csv("./data/heatwavefecundity.csv",stringsAsFactors = FALSE,
@@ -241,14 +250,24 @@ f_data_filtered <- f_data %>%
 #------Stats------#
 
 # Filter data to include only heatwave populations
-f_data_treatment <- f_data_filtered %>%
-  filter(heatwave == "Heatwave")
+f_data_control <- f_data_filtered %>%
+  filter(heatwave == "Control")
+
+# Get population means
+fec_means_control <- f_data_control %>%
+  group_by(adapted_temp, population_id) %>%
+  summarise(popmean = mean(egg_count))
 
 # Construct a linear model
-lm_fecundity_treatment <- lm(egg_count ~ adapted_temp, data = f_data_treatment)
+lm_fecundity_control <- lm(popmean ~ adapted_temp, data = fec_means_control)
+
+#Check model assumptions
+#windows();plot(lm_fecundity_control) looks OK
+shapiro.test(residuals(lm_fecundity_control))
+leveneTest(residuals(lm_fecundity_control) ~ fec_means_control$adapted_temp)
 
 # Run an ANOVA
-Anova(lm_fecundity_treatment, type = "2")
+Anova(lm_fecundity_control, type = "2")
 
 
 #------Plot------#
@@ -294,7 +313,7 @@ egg_means <- egg_means %>%
 
 # Generate plot
 f_p <- ggplot(f_summary_data, aes(x = x_pos_f, y = mean, color = adapted_temp, shape = heatwave)) +
-  geom_point(size = 4, position = position_dodge(width = 0.5)) +
+  geom_point(size = 5, position = position_dodge(width = 0.5)) +
   geom_jitter(data = egg_means, 
               aes(x = x_pos_f, y = mean_egg_count, 
                   color = adapted_temp,
@@ -302,10 +321,10 @@ f_p <- ggplot(f_summary_data, aes(x = x_pos_f, y = mean, color = adapted_temp, s
                   group = population_id),
               position = position_jitterdodge(jitter.width = 0.06, 
                                               dodge.width = 0.2), 
-              size = 3, alpha = 0.5) +
+              size = 3, alpha = 0.3) +
   geom_errorbar(aes(ymin = mean - se, ymax = mean + se), 
                 position = position_dodge(width = 0.6),
-                width = 0) +
+                width = 0, linewidth = 1.12) +
   geom_text(aes(label = plotting_labels,
                 group = adapted_temp,
                 y = mean + se + 5.8),
@@ -314,13 +333,13 @@ f_p <- ggplot(f_summary_data, aes(x = x_pos_f, y = mean, color = adapted_temp, s
             size = 7) +
   scale_color_manual(
     values = c("25°C" = "cornflowerblue", "30°C" = "darkorange", "35°C" = "brown3"),   
-    name = "Adapted temperature")+
+    name = "Historical temperature")+
   scale_y_continuous(limits = c(0, 24)) +
   scale_x_continuous(
     breaks = c(1.1, 1.7, 2.3, 3.3, 3.9, 4.5),
     labels = c("25°C", "30°C", "35°C", "25°C", "30°C", "35°C"),
     limits = c(0.8, 4.8)) +
-  xlab("Adapted temperature") +   
+  xlab("Historical temperature") +   
   ylab("Number of eggs per female") +
   labs(title = "Fecundity after heatwave")+ 
   theme_tess()+ 
@@ -340,8 +359,8 @@ f_p_noleg <- f_p + theme(legend.position = "none")
 legend <- get_legend(p_post +
     theme(legend.position = "right",
           legend.box = "vertical",
-          legend.title = element_text(size = 18),
-          legend.text  = element_text(size = 16),
+          legend.title = element_text(size = 22),
+          legend.text  = element_text(size = 19),
           legend.key.size = unit(0.8, "cm"),
           legend.spacing.y = unit(0.2, "cm")))
 
