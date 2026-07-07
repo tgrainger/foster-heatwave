@@ -39,7 +39,7 @@ female_2weeks <- data %>%
   select(survival_twoweeks_binomial, weight_mg)
 
 
-# Construct a general linear model
+# First try using a general linear model
 model_1 <- glm(survival_twoweeks_binomial ~ weight_mg, 
                data = female_2weeks,
                family = binomial) # Model doesn't converge, likely due to complete/quasi-separation of survival
@@ -48,8 +48,7 @@ model_1 <- glm(survival_twoweeks_binomial ~ weight_mg,
 anova(model_1, test = "Chisq")
 #significant
 
-# Check for complete/quasi-complete separation
-# Extremely large standard errors & large coefficient estimates
+# Check for complete/quasi-complete separation (extremely large standard errors & large coefficient estimates)
 summary(model_1)
 
 # Formal test for separation
@@ -61,11 +60,11 @@ glm_sep <- glm(
 glm_sep
 #yes, confirms separation
 
-
 # Construct Firth logistic regression to deal with data separation
 firthmodel_1 <- logistf(survival_twoweeks_binomial ~ weight_mg, 
                         data = female_2weeks)
 
+# Run a penalized likelihood ratio test (preferred for Firths)
 summary(firthmodel_1)
 
 # Generate new plot with fitted firth logistic regression
@@ -98,15 +97,6 @@ p_f_firth <- ggplot(female_2weeks, aes(x = weight_mg, y = survival_twoweeks_bino
   labs(title = "Females", x = "Body size (mg)", y = "Survival") +
   theme_tess()
 
-# Plot without CIs (for main paper)
-
-p_f_firth_noci <- ggplot(female_2weeks, aes(x = weight_mg, y = survival_twoweeks_binomial)) +
-  geom_jitter(height = 0.01, width = 0, size = 3, colour = "black") +
-  geom_line(data = newdata, aes(x = weight_mg, y = fit), inherit.aes = FALSE, color = "black", linewidth = 1) +
-  scale_y_continuous(breaks = c(0, 1), labels = c("Died", "Survived")) +
-  labs(title = "Females", x = "Body size (mg)", y = "Survival") +
-  theme_tess()
-
 
 #### Males  ####
 
@@ -119,6 +109,10 @@ male_2weeks <- data %>%
 model_2 <- glm(survival_twoweeks_binomial ~ weight_mg, 
                data = male_2weeks,
                family = binomial)
+
+# Check for complete/quasi-complete separation
+# Extremely large standard errors & large coefficient estimates
+summary(model_2)
 
 # Check for separation
 glm_sep <- glm(
@@ -134,7 +128,9 @@ glm_sep
 firthmodel_2 <- logistf(survival_twoweeks_binomial ~ weight_mg, 
                         data = male_2weeks)
 
+# Penalized likelihood ratio test to test for significance
 summary(firthmodel_2)
+#highly significant
 
 # Generate new plot with fitted firth logistic regression
 
@@ -154,7 +150,7 @@ newdata$fit <- plogis(pred$fit)
 newdata$lwr <- plogis(pred$fit - 1.96 * pred$se.fit)
 newdata$upr <- plogis(pred$fit + 1.96 * pred$se.fit)
 
-# Plot with CIs (for supp mat)
+# Plot with CIs
 
 p_m_firth <- ggplot(male_2weeks, aes(x = weight_mg, y = survival_twoweeks_binomial)) +
   geom_jitter(height = 0.01, width = 0, size = 3, colour = "black") +
@@ -166,49 +162,13 @@ p_m_firth <- ggplot(male_2weeks, aes(x = weight_mg, y = survival_twoweeks_binomi
   labs(title = "Males", x = "Body size (mg)", y = "Survival") +
   theme_tess()
 
-#windows();p_m_firth
-
-# Run an ANOVA
-anova(model_2, test = "Chisq")
-#significant
-
-# Generate plot
-p_m2w <- ggplot(male_2weeks, aes(x = weight_mg, y = survival_twoweeks_binomial)) +
-  geom_jitter(height = 0.01, width = 0, size=3, shape=16, colour="black") +
-  geom_smooth(method = "glm", method.args = list(family = "binomial"), 
-              se = FALSE, color = "black") +
-  scale_y_continuous(breaks = c(0, 1), labels = c("Died", "Survived")) +
-  labs(title = "Males",
-       x = "Body size (mg)", 
-       y = "") +
-  theme_tess()
-
-#windows();p_m2w
-
-
-# Same plot as above but with CIs
-p_m_CI <- ggplot(male_2weeks, aes(x = weight_mg, y = survival_twoweeks_binomial)) +
-  geom_jitter(height = 0.01, width = 0, size=3, shape=16, colour="black") +
-  geom_smooth(method = "glm", method.args = list(family = "binomial"), 
-              se = TRUE, color = "black") +
-  scale_y_continuous(breaks = c(0, 1), labels = c("Died", "Survived")) +
-  labs(title = "Males",
-       x = "Body size (mg)", 
-       y = "") +
-  theme_tess()
 
 #-------------- Combined plot ---------------#
-
-# Generate a combined plot (no CIs)
-combined_2w <- plot_grid(p_f_firth_noci, p_m2w,
-                      ncol = 2, align = "hv", axis = "tb")
- 
-ggsave(filename = "./figures/bodysizesurvival.pdf",
-       plot = combined_2w, width = 35, height = 19, units = "cm", dpi = 300)
 
 #Generate a combined plot with CIs
 combined_survival_CI <- plot_grid(p_f_firth, p_m_firth,
                                   ncol = 2, align = "hv", axis = "tb")
 
-ggsave(filename = "./figures/bodysizesurvival_supp.pdf",
-       plot = combined_survival_CI, width = 35, height = 19, units = "cm", dpi = 300)
+ggsave(filename = "./figures/bodysizesurvival.pdf",
+       plot = combined_survival_CI, width = 35, height = 19, 
+       units = "cm", dpi = 300)
