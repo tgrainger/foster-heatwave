@@ -38,18 +38,15 @@ female_2weeks <- data %>%
   filter(sex == "f") %>%
   select(survival_twoweeks_binomial, weight_mg)
 
-
-# First try using a general linear model
+# First try using a binomial glm
 model_1 <- glm(survival_twoweeks_binomial ~ weight_mg, 
                data = female_2weeks,
                family = binomial) # Model doesn't converge, likely due to complete/quasi-separation of survival
 
-# Run an ANOVA
-anova(model_1, test = "Chisq")
-#significant
-
-# Check for complete/quasi-complete separation (extremely large standard errors & large coefficient estimates)
+# Check for complete/quasi-complete separation 
+#(extremely large standard errors & large coefficient estimates)
 summary(model_1)
+#yes, not looking good
 
 # Formal test for separation
 glm_sep <- glm(
@@ -105,13 +102,13 @@ male_2weeks <- data %>%
   filter(sex == "m") %>%
   select(survival_twoweeks_binomial, weight_mg)
 
-# Construct a general linear model
+# First try a regular binomial glm
 model_2 <- glm(survival_twoweeks_binomial ~ weight_mg, 
                data = male_2weeks,
                family = binomial)
 
 # Check for complete/quasi-complete separation
-# Extremely large standard errors & large coefficient estimates
+# (large standard errors & coefficient estimates)
 summary(model_2)
 
 # Check for separation

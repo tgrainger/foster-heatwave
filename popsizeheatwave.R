@@ -133,14 +133,14 @@ data <- data%>%
   mutate(pop_id = paste(adapted_temp,heatwave,population_id, sep = "_"))
 
 # Check that n = 60 for pop_id
-#n_distinct(data$pop_id)
+n_distinct(data$pop_id)
 
-# Construct a global linear model
+# Construct a linear mixed effects model
 lmmglobal <- lmer(alive ~ adapted_temp * heatwave * weeks_since_heatwave + 
                     (1|pop_id),data = data)
 
 # Run a three-way ANOVA
-Anova(lmmglobal, type = 3)
+Anova(lmmglobal, type = 2)
 #significant three-way interaction
 
 #------ Two-way ANOVAs for each time point ------#
@@ -150,7 +150,7 @@ week0data <- data %>%
   filter(weeks_since_heatwave == 0)
 
 # Construct a linear model
-lm_week0<-lm(alive~adapted_temp*heatwave,data=week0data)
+lm_week0<-lm(log(alive)~adapted_temp*heatwave,data=week0data)
 
 # Run an ANOVA
 Anova(lm_week0,type="2")

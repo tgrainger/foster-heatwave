@@ -37,9 +37,9 @@ data$weight <- data$weight * 1000
 # Construct a linear model
 lm_bodysize <- lm(weight ~ adapted_temp * sex, data = data)
 
-#Check model assumptions
+# Check model assumptions
 #windows();plot(lm_bodysize) 
-#looks good
+#looks ok
 
 # Run an ANOVA
 Anova(lm_bodysize, type="2")
@@ -94,6 +94,7 @@ p_pre <- ggplot(summary_data, aes(x = sex, y = mean, color = adapted_temp)) +
   theme_tess() + 
   theme(aspect.ratio = 1)
 
+windows();p_pre
 
 ####END OF EXPERIMENT BODY SIZE#### 
 
@@ -106,11 +107,13 @@ data2$adapted_temp <- factor(data2$adapted_temp,
                             levels = c(25, 30, 35),
                             labels = c("25°C", "30°C", "35°C"))
 
+# Make heatwave a factor
+data2$heatwave <- as.factor(data2$heatwave)
+
 # Convert grams to milligrams
 data2$weight <- data2$weight * 1000
 
-
-# Calculate the mean for each population
+# Calculate mean body size from 5 females per population
 means <- data2 %>%
   drop_na(weight) %>%
   group_by(heatwave, adapted_temp, sex, population_id) %>%
@@ -127,7 +130,7 @@ lm_bodysize_post <- lm(pop_mean ~ adapted_temp * sex * heatwave, data = means)
 
 # Run an ANOVA
 Anova(lm_bodysize_post, type="2")
-#significant interaction
+# no significant interactions, only significant effects of adapted temp and sex
 
 # Run a Tukey test
 emmeans(lm_bodysize_post, pairwise ~ adapted_temp | sex * heatwave, 
@@ -249,7 +252,7 @@ f_data_filtered <- f_data %>%
 
 #------Stats------#
 
-# Filter data to include only heatwave populations
+# Filter data to include only no-heatwave populations (heatwave pops had near zero fecundity)
 f_data_control <- f_data_filtered %>%
   filter(heatwave == "Control")
 
@@ -262,13 +265,15 @@ fec_means_control <- f_data_control %>%
 lm_fecundity_control <- lm(popmean ~ adapted_temp, data = fec_means_control)
 
 #Check model assumptions
-#windows();plot(lm_fecundity_control) looks OK
+#windows();plot(lm_fecundity_control)
+#looks ok
 shapiro.test(residuals(lm_fecundity_control))
+#normal
 leveneTest(residuals(lm_fecundity_control) ~ fec_means_control$adapted_temp)
+#equal variances
 
 # Run an ANOVA
 Anova(lm_fecundity_control, type = "2")
-
 
 #------Plot------#
 
