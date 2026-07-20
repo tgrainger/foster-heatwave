@@ -94,7 +94,7 @@ p_pre <- ggplot(summary_data, aes(x = sex, y = mean, color = adapted_temp)) +
   theme_tess() + 
   theme(aspect.ratio = 1)
 
-windows();p_pre
+#windows();p_pre
 
 ####END OF EXPERIMENT BODY SIZE#### 
 

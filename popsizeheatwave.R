@@ -150,7 +150,7 @@ week0data <- data %>%
   filter(weeks_since_heatwave == 0)
 
 # Construct a linear model
-lm_week0<-lm(log(alive)~adapted_temp*heatwave,data=week0data)
+lm_week0<-lm(alive~adapted_temp*heatwave,data=week0data)
 
 # Run an ANOVA
 Anova(lm_week0,type="2")
