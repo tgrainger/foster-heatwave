@@ -72,3 +72,12 @@ Packages: ggplot2 (version 3.5.2), cowplot (version 1.1.3), dplyr (version 2.5.0
 \- `survival_twoweeks`: the survival (s) or death (d) of beetles two weeks after a heatwave 
 
 \- `weight`: dry weight of beetle in grams
+
+#### **Contact information**
+
+Tess Grainger
+
+Department of Integrative Biology
+University of Guelph
+
+Email: tess.grainger@uoguelph.ca
