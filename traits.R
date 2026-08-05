@@ -2,9 +2,9 @@
 library(ggplot2)
 library(cowplot)
 library(dplyr)
-library(tidyr)
 library(car) 
-library(emmeans) 
+library(tidyr)
+library(emmeans)
 
 # Import ggplot theme for plots
 theme_tess <- function () { 
@@ -32,7 +32,7 @@ data$adapted_temp <- factor(data$adapted_temp,
 # Convert grams to milligrams
 data$weight <- data$weight * 1000
 
-#------Stats------#
+## Stats
 
 # Construct a linear model
 lm_bodysize <- lm(weight ~ adapted_temp * sex, data = data)
@@ -48,7 +48,7 @@ Anova(lm_bodysize, type="2")
 # Run a Tukey test
 emmeans(lm_bodysize, pairwise ~ adapted_temp | sex, adjust = "tukey")
 
-#------Plot------#
+## Plot (Figure 2a)
 
 # Order the x-axis raw data points
 data <- data %>% 
@@ -70,7 +70,7 @@ summary_data <- summary_data %>%
 # Add letters denoting Tukey test results
 summary_data$plotting_labels <- c("a", "a", "b", "a", "a", "a")
 
-# Generate plot
+# Generate plot (Fig 2a)
 p_pre <- ggplot(summary_data, aes(x = sex, y = mean, color = adapted_temp)) +
   geom_jitter(data = data, aes(x = sex, y = weight, color = adapted_temp), 
               position = position_jitterdodge(jitter.width = 0.1, dodge.width = 0.4), 
@@ -96,7 +96,7 @@ p_pre <- ggplot(summary_data, aes(x = sex, y = mean, color = adapted_temp)) +
 
 #windows();p_pre
 
-####END OF EXPERIMENT BODY SIZE#### 
+#### END EXPERIMENT BODY SIZE ####
 
 # Import data
 data2 <-read.csv("./data/postheatwavebodysize.csv",stringsAsFactors = FALSE,
@@ -119,7 +119,7 @@ means <- data2 %>%
   group_by(heatwave, adapted_temp, sex, population_id) %>%
   summarise(pop_mean = mean(weight))
 
-#------Stats------#
+## Stats
 
 # Construct a linear model
 lm_bodysize_post <- lm(pop_mean ~ adapted_temp * sex * heatwave, data = means)
@@ -136,7 +136,7 @@ Anova(lm_bodysize_post, type="2")
 emmeans(lm_bodysize_post, pairwise ~ adapted_temp | sex * heatwave, 
         adjust = "tukey")
 
-#------Plot------#
+## Plot (Figure 2b)
 
 # Calculate summary statistics using the means for each population
 summary_data2 <- means %>%
@@ -198,7 +198,7 @@ summary_data2 <- summary_data2 %>%
 # Add letters denoting Tukey test results
 summary_data2$plotting_labels <- c("a", "a", "a", "a", "a", "a", "a", "a", "b", "a", "ab", "b")
 
-# Generate plot
+# Generate plot (Fig 2b)
 p_post <- ggplot(summary_data2, aes(x = x_pos, y = mean, 
                 color = adapted_temp, shape = heatwave)) +
   geom_point(size = 5, position = position_dodge(width = 0.4)) +
@@ -250,7 +250,7 @@ f_data$adapted_temp <- factor(f_data$adapted_temp,
 f_data_filtered <- f_data %>%
   filter((notes != "nb" & notes != "db") | is.na(notes))
 
-#------Stats------#
+## Stats
 
 # Filter data to include only no-heatwave populations (heatwave pops had near zero fecundity)
 f_data_control <- f_data_filtered %>%
@@ -275,7 +275,7 @@ leveneTest(residuals(lm_fecundity_control) ~ fec_means_control$adapted_temp)
 # Run an ANOVA
 Anova(lm_fecundity_control, type = "2")
 
-#------Plot------#
+## Plot (Fig 2c)
 
 # Calculate the mean number of eggs for each population
 egg_means <- f_data_filtered%>%
@@ -316,7 +316,7 @@ egg_means <- egg_means %>%
     heatwave == "Heatwave" & adapted_temp == "30°C" ~ 3.9,
     heatwave == "Heatwave" & adapted_temp == "35°C" ~ 4.5))
 
-# Generate plot
+# Generate plot (Fig 2c)
 f_p <- ggplot(f_summary_data, aes(x = x_pos_f, y = mean, color = adapted_temp, shape = heatwave)) +
   geom_point(size = 5, position = position_dodge(width = 0.5)) +
   geom_jitter(data = egg_means, 
@@ -350,7 +350,7 @@ f_p <- ggplot(f_summary_data, aes(x = x_pos_f, y = mean, color = adapted_temp, s
   theme_tess()+ 
   theme(aspect.ratio = 1,axis.text.x = element_text(size = 17))
 
-#### COMBINED PLOT ####
+#### COMBINED PLOT (Figure 2) ####
 
 # Adjust the axis text size for the combined plot
 p_post <- p_post + theme(axis.text.x = element_text(size = 18))

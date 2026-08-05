@@ -92,7 +92,7 @@ data$weeks_since_heatwave <- as.numeric(as.character(data$weeks_since_heatwave))
     mutate(x_pos = time_index + x_offset)
   
 
-# Generate a plot of population size for different adapted temperatures with and without a heatwave
+# Plot (Figure 1)
 p <- ggplot(summary_data, aes(x = x_pos, y = mean, color = adapted_temp, 
                               shape = heatwave, group = group_id)) +
     geom_point(size = 4.5) +
@@ -120,7 +120,7 @@ p <- ggplot(summary_data, aes(x = x_pos, y = mean, color = adapted_temp,
 
 #windows();p 
 
-# Save the plot
+# Save the plot (Figure 1)
 ggsave(file="./figures/popsize.pdf", p, 
        width = 30, height = 18, units = "cm", dpi = 200) 
 

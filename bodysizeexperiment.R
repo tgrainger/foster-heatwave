@@ -82,7 +82,7 @@ newdata$fit <- plogis(pred$fit)
 newdata$lwr <- plogis(pred$fit - 1.96 * pred$se.fit)
 newdata$upr <- plogis(pred$fit + 1.96 * pred$se.fit)
 
-# Plot with CIs (for supp mat)
+# Plot with CIs (Figure 3a)
 
 p_f_firth <- ggplot(female_2weeks, aes(x = weight_mg, y = survival_twoweeks_binomial)) +
   geom_jitter(height = 0.01, width = 0, size = 3, colour = "black") +
@@ -147,7 +147,7 @@ newdata$fit <- plogis(pred$fit)
 newdata$lwr <- plogis(pred$fit - 1.96 * pred$se.fit)
 newdata$upr <- plogis(pred$fit + 1.96 * pred$se.fit)
 
-# Plot with CIs
+# Plot with CIs (Figure 3b)
 
 p_m_firth <- ggplot(male_2weeks, aes(x = weight_mg, y = survival_twoweeks_binomial)) +
   geom_jitter(height = 0.01, width = 0, size = 3, colour = "black") +
@@ -160,7 +160,7 @@ p_m_firth <- ggplot(male_2weeks, aes(x = weight_mg, y = survival_twoweeks_binomi
   theme_tess()
 
 
-#-------------- Combined plot ---------------#
+### Combined plot (Figure 3)
 
 #Generate a combined plot with CIs
 combined_survival_CI <- plot_grid(p_f_firth, p_m_firth,
@@ -169,3 +169,4 @@ combined_survival_CI <- plot_grid(p_f_firth, p_m_firth,
 ggsave(filename = "./figures/bodysizesurvival.pdf",
        plot = combined_survival_CI, width = 35, height = 19, 
        units = "cm", dpi = 300)
+
